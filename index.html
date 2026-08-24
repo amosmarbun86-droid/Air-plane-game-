@@ -1,0 +1,122 @@
+<!doctype html><html lang="id"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>WAR PLANE — Infinite Missions</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#02070d;color:#fff;font-family:Arial,sans-serif;touch-action:none}canvas{width:100%;height:100%;display:block}
+#hud{position:fixed;top:0;left:0;right:0;padding:8px;z-index:5;pointer-events:none}.r{display:flex;justify-content:space-between;gap:6px}.b{background:#030a12dd;border:1px solid #ffffff22;border-radius:9px;padding:6px 8px;font-size:10px}.v{font-size:14px;font-weight:bold}.bar{height:7px;background:#29151b;border-radius:8px;overflow:hidden;margin-top:3px}.f{height:100%}
+#hp{background:#36d878}#base{background:#43bde8}#xp{background:#ffd34e}
+#mission{position:fixed;top:65px;left:50%;transform:translateX(-50%);z-index:5;background:#030a12cc;padding:6px 12px;border-radius:18px;font-size:11px;white-space:nowrap}
+#pauseBtn{position:fixed;right:9px;top:112px;z-index:8;background:#07131fdd;color:white;border:1px solid #567086;border-radius:9px;width:44px;height:40px;font-size:18px}
+#brand{position:fixed;bottom:5px;left:50%;transform:translateX(-50%);z-index:5;color:#ffffff66;font-size:10px;white-space:nowrap;pointer-events:none}
+.ov{position:fixed;inset:0;z-index:20;background:#01050aee;display:flex;align-items:center;justify-content:center;padding:18px;text-align:center}.p{width:min(430px,94vw);max-height:92vh;overflow:auto;background:#09131fff;border:1px solid #ffffff2d;border-radius:20px;padding:22px 18px;box-shadow:0 20px 70px #000}
+h1{margin:0 0 5px;font-size:28px;letter-spacing:2px}h2{margin:0 0 12px;color:#ffd45b}p{color:#c8d4df;line-height:1.45}input{width:100%;padding:13px;border-radius:10px;border:1px solid #38506a;background:#07111d;color:white;font-size:16px;text-align:center;margin:7px 0 12px}button{border:0;border-radius:11px;padding:13px 20px;margin:4px;background:#e84f32;color:white;font-weight:bold;font-size:15px}.alt{background:#24415c}.green{background:#168c5a}.grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:12px 0}.stat{text-align:left;border:1px solid #26394d;border-radius:9px;padding:8px;font-size:11px;color:#aebfd0}.stat b{display:block;color:white;font-size:16px}.small{font-size:10px;color:#8498ab}.hidden{display:none!important}
+.shipCard{border:1px solid #26394d;border-radius:12px;padding:9px;text-align:left;font-size:11px;color:#aebfd0;display:flex;flex-direction:column;gap:5px}.shipCard b{color:white;font-size:13px}.shipCard button{width:100%;margin:2px 0 0;padding:8px;font-size:12px}.swatch{width:100%;height:34px;border-radius:8px;margin-bottom:2px}
+.owned{background:#24415c}.equipped{background:#168c5a}.locked{background:#3a2222}
+</style></head><body>
+<canvas id="c"></canvas>
+<div id="hud" class="hidden"><div class="r"><div class="b">👤 <span id="uh">PILOT</span></div><div class="b">🎖️ LV <span class="v" id="lv">1</span></div><div class="b">💰 <span class="v" id="coin">0</span></div></div>
+<div class="r" style="margin-top:5px"><div class="b">❤️ <span id="ht">100</span><div class="bar"><div id="hp" class="f"></div></div></div><div class="b">🏰 <span id="bt">100</span><div class="bar"><div id="base" class="f"></div></div></div><div class="b">🎯 <span id="kill">0</span></div></div>
+<div class="r" style="margin-top:5px"><div class="b">⭐ XP <span id="xt">0</span><div class="bar"><div id="xp" class="f"></div></div></div><div class="b">🏆 <span id="score">0</span></div></div></div>
+<div id="mission" class="hidden"></div><button id="pauseBtn" class="hidden">Ⅱ</button><div id="brand">Powered by Amos'rcpdroid86 🤖</div>
+
+<div id="login" class="ov"><div class="p"><h1>✈️ WAR PLANE</h1><h2>INFINITE AIR WAR</h2><p>Buat nama pilot. Progress disimpan otomatis di browser HP.</p><input id="name" maxlength="18" placeholder="Nama Pilot"><button id="create">MULAI SEBAGAI PILOT</button><p class="small">Persiapkan pesawatmu dan selesaikan setiap misi.</p></div></div>
+
+<div id="profile" class="ov hidden"><div class="p"><h1>👤 PILOT PROFILE</h1><h2 id="pn">PILOT</h2><div class="grid">
+<div class="stat">🎖️ LEVEL<b id="pl">1</b></div><div class="stat">💰 COIN<b id="pc">0</b></div><div class="stat">🎯 TOTAL KILL<b id="pk">0</b></div><div class="stat">🏆 SCORE<b id="ps">0</b></div><div class="stat">🚀 MISSION<b id="pm">1</b></div><div class="stat">✈️ PESAWAT<b id="pshipname">-</b></div><div class="stat">🔫 SENJATA<b id="pweapon">1</b>/10</div></div>
+<button id="cont" class="green">LANJUTKAN</button><button id="ph" class="alt">🛠 HANGAR</button><button id="reset" class="alt">RESET PROFILE</button></div></div>
+
+<div id="hangar" class="ov hidden"><div class="p"><h1>🛠 HANGAR</h1><p class="small">💰 Coin kamu: <b id="hcoin">0</b></p>
+<h2>Pilih Pesawat</h2><div id="shipList" class="grid"></div>
+<h2 style="margin-top:10px">Upgrade Senjata</h2>
+<div class="stat" style="text-align:center">Level Senjata: <b id="wlvl">1</b> / 10<br><span class="small" id="wcost"></span><br><button id="buyWeapon" class="green">UPGRADE SENJATA</button></div>
+<button id="hangarBack" class="alt" style="margin-top:10px">KEMBALI</button></div></div>
+
+<div id="brief" class="ov hidden"><div class="p"><h1 id="mn">MISSION 01</h1><h2 id="mm"></h2><p id="md"></p><button id="launch">MULAI MISI</button><button id="briefHangar" class="alt">🛠 HANGAR</button></div></div>
+<div id="pause" class="ov hidden"><div class="p"><h1>⏸️ PAUSED</h1><h2 id="pmt"></h2><button id="resume" class="green">▶ LANJUTKAN</button><button id="again" class="alt">🔄 ULANGI</button><button id="pp" class="alt">👤 PROFILE</button></div></div>
+<div id="result" class="ov hidden"><div class="p"><h1 id="rt"></h1><h2 id="rs"></h2><p id="rx"></p><button id="next" class="green">MISSION BERIKUTNYA</button><button id="rh" class="alt">🛠 HANGAR</button><button id="rp" class="alt">👤 PROFILE</button></div></div>
+
+<script>
+const c=document.getElementById('c'),x=c.getContext('2d');let W,H,dpr,playing=false,paused=false,last,mission=1,mode,target,time=0,hp=100,base=100,kills=0,score=0,weapon=1,spawn=0,shot=0,boss=false,pl,bul=[],ens=[],parts=[],stars=[],ebul=[],kingTimer=0;
+const SHIPS=[
+ {id:'default',name:'F-1 STANDARD',cost:0,color:'#45c9f0',speedMul:1,fireMul:1},
+ {id:'raptor',name:'X-2 RAPTOR',cost:600,color:'#5be0a0',speedMul:1.15,fireMul:1.1},
+ {id:'phantom',name:'F-9 PHANTOM',cost:1400,color:'#ffb648',speedMul:1.3,fireMul:1.25},
+ {id:'omega',name:'OMEGA STRIKE',cost:3000,color:'#ff5b8a',speedMul:1.5,fireMul:1.45},
+ {id:'valkyrie',name:'V-5 VALKYRIE',cost:5200,color:'#8ee7ff',speedMul:1.65,fireMul:1.6},
+ {id:'nova',name:'NOVA STRIKER',cost:8000,color:'#c58bff',speedMul:1.8,fireMul:1.75},
+ {id:'titan',name:'TITAN WING',cost:12000,color:'#ffe36a',speedMul:1.95,fireMul:1.9},
+ {id:'apex',name:'APEX ZERO',cost:18000,color:'#ff4d6a',speedMul:2.15,fireMul:2.1}
+];
+const WEAPON_MAX=10;
+function weaponCost(lvl){return lvl*450}
+function curShip(){return SHIPS.find(s=>s.id===user.currentShip)||SHIPS[0]}
+let user={name:'PILOT',level:1,xp:0,totalKills:0,totalScore:0,coins:0,lastMission:1,weapon:1,ships:['default'],currentShip:'default'};
+const $=i=>document.getElementById(i),hide=i=>$(i).classList.add('hidden'),show=i=>$(i).classList.remove('hidden');
+try{let q=localStorage.getItem('warplane_user');if(q)user={...user,...JSON.parse(q)}}catch(e){}
+if(!user.ships||!user.ships.includes('default'))user.ships=[...new Set(['default',...(user.ships||[])])];
+if(!user.currentShip)user.currentShip='default';
+function save(){localStorage.setItem('warplane_user',JSON.stringify(user))}
+function resize(){dpr=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;c.width=W*dpr;c.height=H*dpr;x.setTransform(dpr,0,0,dpr,0,0)}addEventListener('resize',resize);resize();
+function initStars(){stars=[];for(let i=0;i<90;i++)stars.push({x:Math.random()*W,y:Math.random()*H,s:1+Math.random()*2,v:25+Math.random()*90})}
+function info(n){let a=[['FIRST STRIKE','Hancurkan 50 pesawat musuh.','kill',50],['AIR DEFENSE','Lindungi pangkalan selama 90 detik.','time',90],['INTERCEPTOR','Hancurkan 30 target elite.','kill',30],['ESCORT','Lindungi pesawat sekutu selama 100 detik.','time',100],['BOMBER HUNT','Hancurkan 15 bomber.','bomber',15],['NIGHT ASSAULT','Bertahan selama 120 detik dalam pertempuran malam.','time',120],['BOSS WAR','Kalahkan commander dan selamatkan sektor.','boss',1]];return a[(n-1)%a.length]}
+function profile(){$('pn').textContent=user.name;$('pl').textContent=user.level;$('pc').textContent=user.coins;$('pk').textContent=user.totalKills;$('ps').textContent=user.totalScore;$('pm').textContent=user.lastMission;$('pshipname').textContent=curShip().name;$('pweapon').textContent=user.weapon;show('profile')}
+function renderHangar(){
+ $('hcoin').textContent=user.coins;
+ $('wlvl').textContent=user.weapon;
+ if(user.weapon>=WEAPON_MAX){$('wcost').textContent='Senjata sudah maksimal!';$('buyWeapon').disabled=true;$('buyWeapon').textContent='MAKSIMAL'}
+ else{let cost=weaponCost(user.weapon);$('wcost').textContent='Biaya upgrade ke Lv '+(user.weapon+1)+': 💰 '+cost;$('buyWeapon').disabled=false;$('buyWeapon').textContent='UPGRADE SENJATA (💰'+cost+')'}
+ let html='';
+ for(let s of SHIPS){
+  let owned=user.ships.includes(s.id),equipped=user.currentShip===s.id;
+  html+='<div class="shipCard"><div class="swatch" style="background:'+s.color+'"></div><b>'+s.name+'</b>'
+  +'<span class="small">Kecepatan +'+Math.round((s.speedMul-1)*100)+'% • Rate Tembak +'+Math.round((s.fireMul-1)*100)+'%</span>';
+  if(equipped)html+='<button class="equipped" disabled>DIPAKAI</button>';
+  else if(owned)html+='<button class="owned" data-use="'+s.id+'">PAKAI</button>';
+  else html+='<button class="locked" data-buy="'+s.id+'">BELI 💰'+s.cost+'</button>';
+  html+='</div>';
+ }
+ $('shipList').innerHTML=html;
+ $('shipList').querySelectorAll('[data-use]').forEach(b=>b.onclick=()=>{user.currentShip=b.dataset.use;save();renderHangar()});
+ $('shipList').querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>{let s=SHIPS.find(sh=>sh.id===b.dataset.buy);if(user.coins>=s.cost){user.coins-=s.cost;user.ships.push(s.id);user.currentShip=s.id;save();renderHangar()}else alert('Coin tidak cukup!')});
+}
+$('buyWeapon').onclick=()=>{if(user.weapon>=WEAPON_MAX)return;let cost=weaponCost(user.weapon);if(user.coins>=cost){user.coins-=cost;user.weapon++;save();renderHangar()}else alert('Coin tidak cukup!')};
+function briefing(){let i=info(mission);$('mn').textContent='MISSION '+String(mission).padStart(2,'0');$('mm').textContent=i[0];$('md').innerHTML='<b>'+i[1]+'</b><br><br>Kontrol dengan geser jari. Tembakan otomatis.<br><br><span class="small">Setiap misi memiliki tantangan dan tingkat kesulitan yang berbeda.</span>';show('brief')}
+function resetMission(){let i=info(mission);mode=i[2];target=i[3];time=i[3];hp=100;base=100;kills=0;score=0;weapon=Math.max(1,user.weapon);spawn=0;shot=0;boss=false;bul=[];ens=[];ebul=[];parts=[];kingTimer=18+Math.random()*12;initStars();pl={x:W/2,y:H-165,tx:W/2,ty:H-165,w:44,h:50};playing=true;paused=false;last=performance.now();hud();requestAnimationFrame(loop)}
+function hud(){let i=info(mission);$('uh').textContent=user.name;$('lv').textContent=user.level;$('coin').textContent=user.coins;$('ht').textContent=Math.ceil(hp);$('hp').style.width=hp+'%';$('bt').textContent=Math.ceil(base);$('base').style.width=base+'%';$('kill').textContent=kills;$('score').textContent=score;$('xt').textContent=user.xp;let t='MISSION '+String(mission).padStart(2,'0')+' • '+i[0];if(mode==='time')t+=' • '+Math.ceil(time)+'s';else if(mode==='boss')t+=' • BOSS';else t+=' • '+kills+'/'+target;$('mission').textContent=t}
+function xp(v){user.xp+=v;let need=user.level*100;while(user.xp>=need){user.xp-=need;user.level++;need=user.level*100}save()}
+function shoot(){let ds=weapon>=8?[-18,-8,0,8,18]:weapon>=6?[-16,-6,6,16]:weapon>=4?[-12,0,12]:weapon>=2?[-8,8]:[0];let dmg=weapon>=10?4:weapon>=8?3:weapon>=5?2:1;for(let d of ds)bul.push({x:pl.x+d,y:pl.y-28,v:720,d:dmg})}
+function makeEnemy(){let r=Math.random(),d=Math.min(1,mission/25);if(mode==='boss'&&!boss&&Math.random()<.15){boss=true;return{t:'boss',x:W/2,y:-100,w:84,h:92,v:32,hp:35+mission*5,max:35+mission*5,damage:45,score:3000,shootTimer:1+Math.random()}}if(r<.16)return{t:'bomber',x:30+Math.random()*(W-60),y:-60,w:48,h:57,v:60+d*35,hp:2+Math.floor(d*2),damage:25,score:350,shootTimer:1.2+Math.random()*1.6};if(r<.43)return{t:'fast',x:25+Math.random()*(W-50),y:-50,w:30,h:40,v:160+d*80,hp:1,damage:10,score:150};return{t:'fighter',x:25+Math.random()*(W-50),y:-55,w:39,h:49,v:85+d*65,hp:1+Math.floor(d*2),damage:14,score:100,shootTimer:1.4+Math.random()*1.8}}
+function makeKing(){let d=Math.min(1,mission/25);return{t:'king',x:W/2,y:-110,w:64,h:72,v:38+d*10,hp:14+mission*2,max:14+mission*2,damage:32,score:900,shootTimer:1+Math.random()}}
+function hit(a,b){return Math.abs(a.x-b.x)<(a.w+b.w)/2&&Math.abs(a.y-b.y)<(a.h+b.h)/2}
+function boom(a,b,n=15){for(let i=0;i<n;i++){let q=Math.random()*6.28,v=50+Math.random()*220;parts.push({x:a,y:b,vx:Math.cos(q)*v,vy:Math.sin(q)*v,l:.3+Math.random()*.7,r:2+Math.random()*4})}}
+function done(){return mode==='kill'&&kills>=target||mode==='time'&&time<=0||mode==='bomber'&&kills>=target||mode==='boss'&&boss&&ens.every(e=>e.t!=='boss')}
+function win(){playing=false;user.lastMission=Math.max(user.lastMission,mission+1);user.totalKills+=kills;user.totalScore+=score;let earned=Math.max(20,Math.floor(score/8)+mission*10);user.coins+=earned;save();$('rt').textContent='🏆 MISSION '+String(mission).padStart(2,'0')+' COMPLETE';$('rs').textContent=info(mission)[0];$('rx').innerHTML='Score: <b>'+score+'</b><br>Kill: <b>'+kills+'</b><br>🎖️ Level: <b>'+user.level+'</b><br>💰 Coin didapat: <b>+'+earned+'</b><br>💰 Total Coin: <b>'+user.coins+'</b><br><br>🔓 Mission '+String(mission+1).padStart(2,'0')+' unlocked!';show('result')}
+function lose(){playing=false;user.totalScore+=score;let earned=Math.max(5,Math.floor(score/16));user.coins+=earned;save();$('rt').textContent='💀 MISSION FAILED';$('rs').textContent='SEKTOR GAGAL';$('rx').innerHTML='Score: <b>'+score+'</b><br>Kill: <b>'+kills+'</b><br>💰 Coin didapat: <b>+'+earned+'</b><br><br>Coba lagi untuk melanjutkan progres.';show('result')}
+function update(dt){if(mode==='time'){time-=dt;if(time<=0){time=0;hud();win();return}}for(let s of stars){s.y+=s.v*dt;if(s.y>H)s.y=-5}let sh=curShip();pl.x+=(pl.tx-pl.x)*Math.min(1,dt*12*sh.speedMul);pl.y+=(pl.ty-pl.y)*Math.min(1,dt*12*sh.speedMul);pl.x=Math.max(28,Math.min(W-28,pl.x));pl.y=Math.max(90,Math.min(H-115,pl.y));spawn-=dt;if(spawn<=0){ens.push(makeEnemy());spawn=Math.max(.25,.8-mission*.012)+Math.random()*.25}shot-=dt;if(shot<=0){shoot();shot=(weapon>=8?.08:weapon>=5?.10:weapon>=3?.13:.16)/sh.fireMul}
+kingTimer-=dt;if(kingTimer<=0&&!ens.some(e=>e.t==='king'||e.t==='boss')){ens.push(makeKing());kingTimer=32+Math.random()*20}
+for(let i=bul.length-1;i>=0;i--){let b=bul[i];b.y-=b.v*dt;if(b.y<-40){bul.splice(i,1);continue}for(let j=ens.length-1;j>=0;j--){let e=ens[j];if(hit({x:b.x,y:b.y,w:5,h:17},e)){bul.splice(i,1);e.hp-=b.d;if(e.hp<=0){boom(e.x,e.y,(e.t==='boss'||e.t==='king')?40:15);score+=e.score;kills++;user.totalKills++;xp((e.t==='boss'||e.t==='king')?100:10);ens.splice(j,1)}break}}}
+for(let i=ens.length-1;i>=0;i--){let e=ens[i];e.y+=e.v*dt;if(e.t==='fast')e.x+=Math.sin(performance.now()/210)*40*dt;if(e.t==='boss')e.x=W/2+Math.sin(performance.now()/700)*W*.22;if(e.t==='king')e.x=W/2+Math.sin(performance.now()/650)*W*.18;
+if(e.shootTimer!==undefined&&e.y>0){e.shootTimer-=dt;if(e.shootTimer<=0){let dx=pl.x-e.x,dy=pl.y-e.y,dist=Math.hypot(dx,dy)||1,spd=e.t==='boss'?230:e.t==='king'?215:e.t==='bomber'?185:195;ebul.push({x:e.x,y:e.y+e.h/2,vx:dx/dist*spd,vy:dy/dist*spd,dmg:e.t==='boss'?16:e.t==='king'?13:e.t==='bomber'?9:6});e.shootTimer=e.t==='boss'?(0.9+Math.random()*0.6):e.t==='king'?(1.3+Math.random()*0.7):(1.9+Math.random()*1.5)}}
+if(e.y>H-85){base=Math.max(0,base-e.damage);boom(e.x,H-65,30);ens.splice(i,1);if(base<=0){lose();return}}else if(hit(pl,e)){hp=Math.max(0,hp-20);boom(pl.x,pl.y,30);ens.splice(i,1);if(hp<=0){lose();return}}}
+for(let i=ebul.length-1;i>=0;i--){let b=ebul[i];b.x+=b.vx*dt;b.y+=b.vy*dt;if(b.y>H+40||b.y<-40||b.x<-40||b.x>W+40){ebul.splice(i,1);continue}if(hit({x:b.x,y:b.y,w:9,h:9},pl)){ebul.splice(i,1);hp=Math.max(0,hp-b.dmg);boom(b.x,b.y,8);if(hp<=0){lose();return}}}
+if(done()){win();return}for(let i=parts.length-1;i>=0;i--){let p=parts[i];p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=90*dt;p.l-=dt;if(p.l<=0)parts.splice(i,1)}hud()}
+function plane(a,b,en,t){x.save();x.translate(a,b);if(en)x.rotate(Math.PI);x.fillStyle=en?(t==='boss'?'#a945d1':t==='king'?'#ffd34e':t==='bomber'?'#d58b45':t==='fast'?'#ed5d42':'#d94d50'):curShip().color;x.beginPath();x.moveTo(0,-30);x.lineTo(10,7);x.lineTo(29,25);x.lineTo(9,20);x.lineTo(0,13);x.lineTo(-9,20);x.lineTo(-29,25);x.lineTo(-10,7);x.closePath();x.fill();x.fillStyle=en?'#28152d':'#eaf8ff';x.beginPath();x.ellipse(0,-10,5,10,0,0,6.28);x.fill();x.restore()}
+function draw(){x.clearRect(0,0,W,H);let g=x.createLinearGradient(0,0,0,H);g.addColorStop(0,'#07182a');g.addColorStop(1,'#02060b');x.fillStyle=g;x.fillRect(0,0,W,H);if(mission%6===0){x.fillStyle='#00002577';x.fillRect(0,0,W,H)}x.fillStyle='#ffffffb0';for(let s of stars)x.fillRect(s.x,s.y,s.s,s.s*2);x.fillStyle='#263d4d';x.fillRect(W/2-95,H-75,190,55);x.fillStyle='#426276';x.fillRect(W/2-70,H-108,140,35);for(let b of bul){x.fillStyle='#ffe36a';x.fillRect(b.x-2.5,b.y-9,5,17)}for(let b of ebul){x.fillStyle='#ff5b5b';x.beginPath();x.arc(b.x,b.y,4.5,0,6.28);x.fill()}for(let e of ens)plane(e.x,e.y,true,e.t);plane(pl.x,pl.y,false);for(let p of parts){x.globalAlpha=Math.max(0,p.l*1.5);x.fillStyle='#ffbd4b';x.beginPath();x.arc(p.x,p.y,p.r,0,6.28);x.fill()}x.globalAlpha=1}
+function loop(t){if(!playing||paused)return;let dt=Math.min((t-last)/1000,.033);last=t;update(dt);draw();if(playing&&!paused)requestAnimationFrame(loop)}
+c.addEventListener('pointerdown',e=>{if(playing&&!paused){pl.tx=e.clientX;pl.ty=e.clientY}});c.addEventListener('pointermove',e=>{if(e.buttons&&playing&&!paused){pl.tx=e.clientX;pl.ty=e.clientY}});
+$('create').onclick=()=>{user={name:$('name').value.trim()||'PILOT',level:1,xp:0,totalKills:0,totalScore:0,coins:0,lastMission:1,weapon:1,ships:['default'],currentShip:'default'};save();hide('login');mission=1;hide('profile');hide('brief');hide('result');$('hud').classList.remove('hidden');$('mission').classList.remove('hidden');$('pauseBtn').classList.remove('hidden');resetMission()};
+$('cont').onclick=()=>{hide('profile');mission=Math.max(1,user.lastMission);briefing()};
+$('launch').onclick=()=>{hide('brief');hide('profile');hide('result');$('hud').classList.remove('hidden');$('mission').classList.remove('hidden');$('pauseBtn').classList.remove('hidden');resetMission()};
+$('pauseBtn').onclick=()=>{if(playing){paused=true;$('pmt').textContent='MISSION '+String(mission).padStart(2,'0');show('pause')}};
+$('resume').onclick=()=>{hide('pause');paused=false;last=performance.now();requestAnimationFrame(loop)};
+$('again').onclick=()=>{hide('pause');resetMission()};
+$('pp').onclick=()=>{hide('pause');profile()};
+$('next').onclick=()=>{mission++;hide('result');briefing()};
+$('rp').onclick=()=>{hide('result');profile()};
+$('rh').onclick=()=>{hide('result');renderHangar();show('hangar')};
+$('ph').onclick=()=>{hide('profile');renderHangar();show('hangar')};
+$('briefHangar').onclick=()=>{hide('brief');renderHangar();show('hangar')};
+$('hangarBack').onclick=()=>{hide('hangar');if(playing)profile();else if(mission>0)briefing();else profile()};
+$('reset').onclick=()=>{if(confirm('Reset semua progress?')){localStorage.removeItem('warplane_user');location.reload()}};
+if(localStorage.getItem('warplane_user')){hide('login');profile()}
+</script></body></html>
