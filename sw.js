@@ -1,4 +1,4 @@
-const CACHE = 'warplane-cache-v4';
+const CACHE = 'warplane-cache-v5';
 const ASSETS = [
   './',
   './index.html',
