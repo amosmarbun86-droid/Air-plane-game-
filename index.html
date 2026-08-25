@@ -45,7 +45,8 @@ h1{margin:0 0 5px;font-size:28px;letter-spacing:2px}h2{margin:0 0 12px;color:#ff
 <div class="grid"><button id="pMute" class="alt">🔊 SUARA</button><button id="logout" class="alt">🚪 LOGOUT</button></div>
 <button id="reset" class="danger" style="width:100%">⚠️ RESET PROFILE</button></div></div>
 
-<div id="leaderboard" class="ov hidden"><div class="p"><h1>🌍 LEADERBOARD GLOBAL</h1><p class="small">Skor tertinggi dari semua pemain di seluruh dunia.</p><div id="lbList" style="text-align:left;margin-top:8px"></div><button id="lbBack" class="alt" style="margin-top:10px">KEMBALI</button></div></div>
+<div id="leaderboard" class="ov hidden"><div class="p"><h1>🌍 LEADERBOARD GLOBAL</h1><p class="small">Top 10 skor tertinggi dari semua pemain di seluruh dunia.</p><div id="lbList" style="text-align:left;margin-top:8px"></div>
+<div class="grid"><button id="lbRefresh" class="alt">🔄 REFRESH</button><button id="lbBack" class="alt">KEMBALI</button></div></div></div>
 
 <div id="hangar" class="ov hidden"><div class="p"><h1>🛠 HANGAR</h1><p class="small">💰 Coin kamu: <b id="hcoin">0</b></p>
 <h2>Pilih Pesawat</h2><div id="shipList" class="grid"></div>
@@ -225,7 +226,7 @@ async function loadLeaderboard(){
   let data=await res.json();
   if(!data.list||!data.list.length){$('lbList').innerHTML='<p class="small">Belum ada skor. Jadilah yang pertama mengirim!</p>';return}
   let html='';
-  data.list.forEach((r,i)=>{html+='<div class="stat" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px"><span>#'+(i+1)+' '+escapeHtml(r.name)+' <span class="small">('+(r.difficulty||'normal').toUpperCase()+')</span></span><b>'+r.score+'</b></div>'});
+  data.list.forEach((r,i)=>{let medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1);let tint=i===0?'border-color:#ffd34e':i===1?'border-color:#cdd6de':i===2?'border-color:#d5905a':'';html+='<div class="stat" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;'+tint+'"><span>'+medal+' '+escapeHtml(r.name)+' <span class="small">('+(r.difficulty||'normal').toUpperCase()+')</span></span><b>'+r.score+'</b></div>'});
   $('lbList').innerHTML=html;
  }catch(e){
   $('lbList').innerHTML='<p class="small">⚠️ Tidak bisa terhubung ke server leaderboard. Fitur ini hanya aktif kalau game di-hosting lewat Vercel dengan API leaderboard yang sudah dikonfigurasi.</p>';
@@ -233,6 +234,7 @@ async function loadLeaderboard(){
 }
 $('pLb').onclick=()=>{hide('profile');loadLeaderboard();show('leaderboard')};
 $('lbBack').onclick=()=>{hide('leaderboard');profile()};
+$('lbRefresh').onclick=async()=>{$('lbRefresh').disabled=true;$('lbRefresh').textContent='🔄 Memuat...';await loadLeaderboard();$('lbRefresh').disabled=false;$('lbRefresh').textContent='🔄 REFRESH'};
 $('submitScore').onclick=async()=>{
  $('submitScore').disabled=true;$('submitScore').textContent='Mengirim...';
  try{
