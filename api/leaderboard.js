@@ -20,7 +20,7 @@ module.exports = async (req, res) => {
   try {
     const snap = await db.collection('scores')
       .orderBy('score', 'desc')
-      .limit(20)
+      .limit(10)
       .get();
 
     const list = snap.docs.map(d => {
