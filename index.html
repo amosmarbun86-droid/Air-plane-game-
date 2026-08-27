@@ -42,6 +42,7 @@ h1{margin:0 0 5px;font-size:28px;letter-spacing:2px}h2{margin:0 0 12px;color:#ff
 <div class="stat">🎖️ LEVEL<b id="pl">1</b></div><div class="stat">💰 COIN<b id="pc">0</b></div><div class="stat">🎯 TOTAL KILL<b id="pk">0</b></div><div class="stat">🏆 SCORE<b id="ps">0</b></div><div class="stat">🚀 MISSION<b id="pm">1</b></div><div class="stat">✈️ PESAWAT / 🔫 SENJATA<b><span id="pshipname">-</span> · Lv<span id="pweapon">1</span></b></div></div>
 <button id="cont" class="green" style="width:100%">▶ LANJUTKAN</button>
 <div class="grid" style="margin-top:2px"><button id="ph" class="alt">🛠 HANGAR</button><button id="pLb" class="alt">🌍 LEADERBOARD</button></div>
+<button id="submitScoreProfile" class="alt" style="width:100%">🌍 KIRIM SKOR TOTAL</button>
 <div class="grid"><button id="pMute" class="alt">🔊 SUARA</button><button id="logout" class="alt">🚪 LOGOUT</button></div>
 <button id="reset" class="danger" style="width:100%">⚠️ RESET PROFILE</button></div></div>
 
@@ -114,7 +115,7 @@ function save(){if(!currentEmail)return;let users=loadUsers();if(!users[currentE
 function resize(){dpr=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;c.width=W*dpr;c.height=H*dpr;x.setTransform(dpr,0,0,dpr,0,0)}addEventListener('resize',resize);resize();
 function initStars(){stars=[];for(let i=0;i<90;i++)stars.push({x:Math.random()*W,y:Math.random()*H,s:1+Math.random()*2,v:25+Math.random()*90})}
 function info(n){let a=[['FIRST STRIKE','Hancurkan 50 pesawat musuh.','kill',50],['AIR DEFENSE','Lindungi pangkalan selama 90 detik.','time',90],['INTERCEPTOR','Hancurkan 30 target elite.','kill',30],['ESCORT','Lindungi pesawat sekutu selama 100 detik.','time',100],['BOMBER HUNT','Hancurkan 15 bomber.','bomber',15],['NIGHT ASSAULT','Bertahan selama 120 detik dalam pertempuran malam.','time',120],['BOSS WAR','Kalahkan commander dan selamatkan sektor.','boss',1]];return a[(n-1)%a.length]}
-function profile(){$('pn').textContent=user.name;$('pl').textContent=user.level;$('pc').textContent=user.coins;$('pk').textContent=user.totalKills;$('ps').textContent=user.totalScore;$('pm').textContent=user.lastMission;$('pshipname').textContent=curShip().name;$('pweapon').textContent=user.weapon;show('profile')}
+function profile(){$('pn').textContent=user.name;$('pl').textContent=user.level;$('pc').textContent=user.coins;$('pk').textContent=user.totalKills;$('ps').textContent=user.totalScore;$('pm').textContent=user.lastMission;$('pshipname').textContent=curShip().name;$('pweapon').textContent=user.weapon;$('submitScoreProfile').disabled=false;$('submitScoreProfile').textContent='🌍 KIRIM SKOR TOTAL';show('profile')}
 function renderHangar(){
  $('hcoin').textContent=user.coins;
  $('wlvl').textContent=user.weapon;
@@ -158,7 +159,7 @@ function makeKing(){let d=missionFactor(mission),df=diffStats();return{t:'king',
 function hit(a,b){return Math.abs(a.x-b.x)<(a.w+b.w)/2&&Math.abs(a.y-b.y)<(a.h+b.h)/2}
 function boom(a,b,n=15){for(let i=0;i<n;i++){let q=Math.random()*6.28,v=50+Math.random()*220;parts.push({x:a,y:b,vx:Math.cos(q)*v,vy:Math.sin(q)*v,l:.3+Math.random()*.7,r:2+Math.random()*4})}}
 function done(){return mode==='kill'&&kills>=target||mode==='time'&&time<=0||mode==='bomber'&&kills>=target||mode==='boss'&&boss&&ens.every(e=>e.t!=='boss')}
-function resetSubmitBtn(){$('submitScore').disabled=false;$('submitScore').textContent='🌍 KIRIM SKOR TOTAL'}
+function resetSubmitBtn(){$('submitScore').disabled=false;$('submitScore').textContent='🌍 KIRIM SKOR TOTAL';$('submitScoreProfile').disabled=false;$('submitScoreProfile').textContent='🌍 KIRIM SKOR TOTAL'}
 function win(){playing=false;sfxWin();user.lastMission=Math.max(user.lastMission,mission+1);user.totalKills+=kills;user.totalScore+=score;let earned=Math.round(Math.max(20,Math.floor(score/8)+mission*10)*diffStats().reward);user.coins+=earned;save();resetSubmitBtn();$('rt').textContent='🏆 MISSION '+String(mission).padStart(2,'0')+' COMPLETE';$('rs').textContent=info(mission)[0];$('rx').innerHTML='Score: <b>'+score+'</b><br>Kill: <b>'+kills+'</b><br>🎖️ Level: <b>'+user.level+'</b><br>💰 Coin didapat: <b>+'+earned+'</b><br>💰 Total Coin: <b>'+user.coins+'</b><br><br>🔓 Mission '+String(mission+1).padStart(2,'0')+' unlocked!';show('result')}
 function lose(){playing=false;sfxLose();user.totalScore+=score;let earned=Math.round(Math.max(5,Math.floor(score/16))*diffStats().reward);user.coins+=earned;save();resetSubmitBtn();$('rt').textContent='💀 MISSION FAILED';$('rs').textContent='SEKTOR GAGAL';$('rx').innerHTML='Score: <b>'+score+'</b><br>Kill: <b>'+kills+'</b><br>💰 Coin didapat: <b>+'+earned+'</b><br><br>Coba lagi untuk melanjutkan progres.';show('result')}
 function update(dt){if(mode==='time'){time-=dt;if(time<=0){time=0;hud();win();return}}for(let s of stars){s.y+=s.v*dt;if(s.y>H)s.y=-5}let sh=curShipStats();pl.x+=(pl.tx-pl.x)*Math.min(1,dt*12*sh.speedMul);pl.y+=(pl.ty-pl.y)*Math.min(1,dt*12*sh.speedMul);pl.x=Math.max(28,Math.min(W-28,pl.x));pl.y=Math.max(90,Math.min(H-115,pl.y));
@@ -236,14 +237,17 @@ async function loadLeaderboard(){
 $('pLb').onclick=()=>{hide('profile');loadLeaderboard();show('leaderboard')};
 $('lbBack').onclick=()=>{hide('leaderboard');profile()};
 $('lbRefresh').onclick=async()=>{$('lbRefresh').disabled=true;$('lbRefresh').textContent='🔄 Memuat...';await loadLeaderboard();$('lbRefresh').disabled=false;$('lbRefresh').textContent='🔄 REFRESH'};
-$('submitScore').onclick=async()=>{
- $('submitScore').disabled=true;$('submitScore').textContent='Mengirim...';
+async function submitScoreVia(btnId){
+ let btn=$(btnId);
+ btn.disabled=true;btn.textContent='Mengirim...';
  try{
   let res=await fetch('/api/submit-score',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:user.name,score:user.totalScore,mission:user.lastMission,kills:user.totalKills,difficulty:user.difficulty,email:currentEmail})});
-  if(res.ok){$('submitScore').textContent='✅ TERKIRIM'}
-  else{$('submitScore').textContent='Gagal, coba lagi';$('submitScore').disabled=false}
- }catch(e){$('submitScore').textContent='⚠️ Tidak terhubung';$('submitScore').disabled=false}
-};
+  if(res.ok){btn.textContent='✅ TERKIRIM'}
+  else{btn.textContent='Gagal, coba lagi';btn.disabled=false}
+ }catch(e){btn.textContent='⚠️ Tidak terhubung';btn.disabled=false}
+}
+$('submitScore').onclick=()=>submitScoreVia('submitScore');
+$('submitScoreProfile').onclick=()=>submitScoreVia('submitScoreProfile');
 $('reset').onclick=()=>{if(confirm('Reset semua progress akun ini?')){let users=loadUsers();delete users[currentEmail];saveUsers(users);localStorage.removeItem('warplane_current');location.reload()}};
 (function autoLogin(){let saved=localStorage.getItem('warplane_current');if(saved){let users=loadUsers();if(users[saved]){currentEmail=saved;user={name:'PILOT',level:1,xp:0,totalKills:0,totalScore:0,coins:0,lastMission:1,weapon:1,ships:['default'],currentShip:'default',shipLevels:{},...users[saved].data};fixUser();hide('login');profile();return}}
  try{if(localStorage.getItem('warplane_user'))$('loginMsg').textContent='Progress lama ditemukan — Daftar akun untuk memindahkannya.'}catch(e){}
