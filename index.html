@@ -64,6 +64,8 @@ h1{margin:0 0 5px;font-size:28px;letter-spacing:2px}h2{margin:0 0 12px;color:#ff
 <div id="pause" class="ov hidden"><div class="p"><h1>⏸️ PAUSED</h1><h2 id="pmt"></h2><button id="resume" class="green">▶ LANJUTKAN</button><button id="again" class="alt">🔄 ULANGI</button><button id="pp" class="alt">👤 PROFILE</button></div></div>
 <div id="result" class="ov hidden"><div class="p"><h1 id="rt"></h1><h2 id="rs"></h2><p id="rx"></p><button id="next" class="green">MISSION BERIKUTNYA</button><button id="submitScore" class="alt">🌍 KIRIM SKOR TOTAL</button><button id="rh" class="alt">🛠 HANGAR</button><button id="rp" class="alt">👤 PROFILE</button></div></div>
 
+<div id="confirmSubmit" class="ov hidden"><div class="p"><h1>🌍 KIRIM SKOR</h1><p>Kirim skor total kamu:<br><b style="font-size:28px;color:#ffd45b" id="confirmScoreVal">0</b><br>ke Leaderboard Global?<br><span class="small">Nama pilotmu akan terlihat oleh semua pemain lain.</span></p><button id="confirmYes" class="green" style="width:100%">✅ IYA, KIRIM</button><button id="confirmNo" class="alt" style="width:100%">❌ TIDAK</button></div></div>
+
 <script>
 const c=document.getElementById('c'),x=c.getContext('2d');let W,H,dpr,playing=false,paused=false,last,mission=1,mode,target,time=0,hp=100,base=100,kills=0,score=0,weapon=1,spawn=0,shot=0,boss=false,pl,bul=[],ens=[],parts=[],stars=[],ebul=[],kingTimer=0;
 const SHIPS=[
@@ -246,8 +248,12 @@ async function submitScoreVia(btnId){
   else{btn.textContent='Gagal, coba lagi';btn.disabled=false}
  }catch(e){btn.textContent='⚠️ Tidak terhubung';btn.disabled=false}
 }
-$('submitScore').onclick=()=>submitScoreVia('submitScore');
-$('submitScoreProfile').onclick=()=>submitScoreVia('submitScoreProfile');
+let pendingSubmitBtn=null;
+function askSubmitScore(btnId){pendingSubmitBtn=btnId;$('confirmScoreVal').textContent=user.totalScore;show('confirmSubmit')}
+$('submitScore').onclick=()=>askSubmitScore('submitScore');
+$('submitScoreProfile').onclick=()=>askSubmitScore('submitScoreProfile');
+$('confirmNo').onclick=()=>{hide('confirmSubmit');pendingSubmitBtn=null};
+$('confirmYes').onclick=async()=>{hide('confirmSubmit');if(pendingSubmitBtn)await submitScoreVia(pendingSubmitBtn);pendingSubmitBtn=null};
 $('reset').onclick=()=>{if(confirm('Reset semua progress akun ini?')){let users=loadUsers();delete users[currentEmail];saveUsers(users);localStorage.removeItem('warplane_current');location.reload()}};
 (function autoLogin(){let saved=localStorage.getItem('warplane_current');if(saved){let users=loadUsers();if(users[saved]){currentEmail=saved;user={name:'PILOT',level:1,xp:0,totalKills:0,totalScore:0,coins:0,lastMission:1,weapon:1,ships:['default'],currentShip:'default',shipLevels:{},...users[saved].data};fixUser();hide('login');profile();return}}
  try{if(localStorage.getItem('warplane_user'))$('loginMsg').textContent='Progress lama ditemukan — Daftar akun untuk memindahkannya.'}catch(e){}
